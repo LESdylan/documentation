@@ -1,0 +1,29 @@
+[package]
+name = "libft-docs"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "doc-generator"
+path = "src/generator.rs"
+
+[[bin]]
+name = "dev-server"
+path = "src/dev_server.rs"
+
+[dependencies]
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+tokio = { version = "1.0", features = ["full"] }
+axum = "0.7"
+tower = "0.4"
+tower-http = { version = "0.5", features = ["fs", "cors"] }
+handlebars = "4.5"
+walkdir = "2.4"
+regex = "1.10"
+clap = { version = "4.4", features = ["derive"] }
+notify = "6.1"
+anyhow = "1.0"
+markdown = "1.0"
+syntect = "5.1"
+include_dir = "0.7"
