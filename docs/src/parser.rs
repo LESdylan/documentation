@@ -2,7 +2,7 @@ use crate::*;
 use regex::Regex;
 use std::collections::HashMap;
 use std::fs;
-use std::path::Path;
+use std::path::{Path, Component};
 use walkdir::WalkDir;
 
 pub struct LibftParser {
@@ -14,6 +14,12 @@ impl LibftParser {
         Self { source_dir }
     }
 
+    fn categories_root(&self) -> std::path::PathBuf {
+        let src = std::path::Path::new(&self.source_dir);
+        let libft = src.join("libft");
+        if libft.is_dir() { libft } else { src.to_path_buf() }
+    }
+
     pub fn parse(&self) -> anyhow::Result<LibraryMetadata> {
         let mut functions = HashMap::new();
         let categories = self.discover_categories()?;
@@ -21,7 +27,7 @@ impl LibftParser {
         println!("🔍 Scanning source directory: {}", self.source_dir);
         let mut file_count = 0;
 
-        // Parse each source file
+        // Parse each source file recursively
         for entry in WalkDir::new(&self.source_dir)
             .follow_links(true)
             .into_iter()
@@ -31,9 +37,20 @@ impl LibftParser {
                 if let Some(ext) = entry.path().extension() {
                     if ext == "c" && !entry.path().to_string_lossy().contains("main.c") {
                         file_count += 1;
+                        
+                        // Extract function name from basename
+                        let filename = entry.path().file_stem()
+                            .and_then(|s| s.to_str())
+                            .unwrap_or("unknown");
+                        
+                        // Skip if already processed
+                        if functions.contains_key(filename) {
+                            continue;
+                        }
+
                         if let Ok(func_meta) = self.parse_c_file(entry.path()) {
                             if let Some(meta) = func_meta {
-                                println!("  📄 Parsed: {} ({})", meta.name, meta.category);
+                                println!("  📄 Parsed: {} ({}) from {}", meta.name, meta.category, entry.path().display());
                                 functions.insert(meta.name.clone(), meta);
                             }
                         }
@@ -51,65 +68,100 @@ impl LibftParser {
             author: "dlesieur".to_string(),
             categories,
             functions,
+            order: Vec::new(),
         })
     }
 
     fn discover_categories(&self) -> anyhow::Result<Vec<String>> {
-        let mut categories = Vec::new();
-        
-        for entry in WalkDir::new(&self.source_dir)
-            .max_depth(3)
+        use std::ffi::OsStr;
+        let src = self.categories_root();
+
+        // Excluded folders that are not code categories
+        const EXCLUDE: &[&str] = &[
+            "docs", "doc", "minilibx-linux", "target", "dist", "website", "bin",
+            "obj", "build", ".git", ".github", ".idea", ".vscode"
+        ];
+
+        let mut cats = Vec::new();
+        if src.is_dir() {
+            for entry in fs::read_dir(src)? {
+                let entry = match entry { Ok(e) => e, Err(_) => continue };
+                let path = entry.path();
+                if !path.is_dir() { continue; }
+                let name = match path.file_name().and_then(OsStr::to_str) {
+                    Some(n) => n,
+                    None => continue,
+                };
+                if name.starts_with('.') || EXCLUDE.contains(&name) { continue; }
+                if self.dir_has_code(&path) {
+                    cats.push(name.to_string());
+                }
+            }
+        }
+        cats.sort();
+        cats.dedup();
+        Ok(cats)
+    }
+
+    fn dir_has_code(&self, dir: &std::path::Path) -> bool {
+        for e in walkdir::WalkDir::new(dir)
+            .min_depth(1)
+            .max_depth(64)
             .into_iter()
             .filter_map(|e| e.ok())
         {
-            if entry.file_type().is_dir() {
-                if let Some(dir_name) = entry.file_name().to_str() {
-                    if !dir_name.starts_with('.') && 
-                       !dir_name.starts_with("obj") && 
-                       !dir_name.starts_with("build") &&
-                       dir_name != "libft" &&
-                       dir_name != "src" {
-                        categories.push(dir_name.to_string());
+            if e.file_type().is_file() {
+                if let Some(ext) = e.path().extension() {
+                    if ext == "c" || ext == "h" {
+                        return true;
                     }
                 }
             }
         }
+        false
+    }
 
-        // Add specific categories based on your libft structure
-        categories.extend([
-            "ctype".to_string(),
-            "debug".to_string(),
-            "memory".to_string(),
-            "math".to_string(),
-            "stdio".to_string(),
-            "strings".to_string(),
-            "stdlib".to_string(),
-            "time".to_string(),
-            "render".to_string(),
-            "data_structures".to_string(),
-            "sort".to_string(),
-        ]);
+    fn extract_category_from_path(&self, path: &Path) -> String {
+        let root = self.categories_root();
+        if let Ok(rel) = path.strip_prefix(&root) {
+            if let Some(first) = rel.components().next() {
+                return first.as_os_str().to_string_lossy().to_string();
+            }
+        }
+        "misc".to_string()
+    }
 
-        categories.sort();
-        categories.dedup();
-        Ok(categories)
+    fn extract_category_path_from_path(&self, path: &Path) -> String {
+        let root = self.categories_root();
+        if let Ok(rel) = path.strip_prefix(&root) {
+            if let Some(parent) = rel.parent() {
+                let mut parts = Vec::new();
+                for c in parent.components() {
+                    if matches!(c, Component::Normal(_)) {
+                        parts.push(c.as_os_str().to_string_lossy());
+                    }
+                }
+                let p = parts.join("/");
+                if !p.is_empty() {
+                    return p;
+                }
+            }
+        }
+        // fallback to top-level category
+        self.extract_category_from_path(path)
     }
 
     fn parse_c_file(&self, path: &Path) -> anyhow::Result<Option<FunctionMetadata>> {
         let content = fs::read_to_string(path)?;
         
-        // Skip files that don't contain function definitions
-        if !content.contains("(") || content.contains("main.c") {
-            return Ok(None);
-        }
-
-        // Extract function name from filename
+        // Extract function name from filename (basename without extension)
         let filename = path.file_stem()
             .and_then(|s| s.to_str())
             .unwrap_or("unknown");
 
         // Determine category from path
         let category = self.extract_category_from_path(path);
+        let category_path = self.extract_category_path_from_path(path);
 
         // Parse function prototype
         let prototype = self.extract_function_prototype(&content, filename)?;
@@ -118,6 +170,7 @@ impl LibftParser {
         let metadata = FunctionMetadata {
             name: filename.to_string(),
             category,
+            category_path,
             tags: self.generate_tags(filename, &content),
             prototype,
             description: self.extract_description(&content),
@@ -127,36 +180,40 @@ impl LibftParser {
             complexity: self.extract_complexity(&content),
             notes: self.extract_notes(&content),
             see_also: self.extract_see_also(filename),
+            updated_at: None,
+            author_role: None,
+            related: Vec::new(),
+            manual_path: None,
+            manual_html: None,
         };
 
         Ok(Some(metadata))
     }
 
-    fn extract_category_from_path(&self, path: &Path) -> String {
-        let path_str = path.to_string_lossy();
-        
-        if path_str.contains("strings") { "strings".to_string() }
-        else if path_str.contains("memory") { "memory".to_string() }
-        else if path_str.contains("math") { "math".to_string() }
-        else if path_str.contains("stdio") { "stdio".to_string() }
-        else if path_str.contains("data_structures") { "data_structures".to_string() }
-        else if path_str.contains("render") { "render".to_string() }
-        else if path_str.contains("stdlib") { "stdlib".to_string() }
-        else if path_str.contains("ctype") { "ctype".to_string() }
-        else { "misc".to_string() }
-    }
-
     fn extract_function_prototype(&self, content: &str, func_name: &str) -> anyhow::Result<String> {
-        // Look for function definition
-        let func_regex = Regex::new(&format!(r"(?m)^[^/]*{}[^{{]*{{", regex::escape(func_name)))?;
+        // Try multiple patterns to find function definition
+        let patterns = [
+            format!(r"(?m)^[^/\n]*\b{}\s*\([^{{]*\)\s*{{", regex::escape(func_name)),
+            format!(r"(?m)^[^/\n]*\b{}\s*\([^;]*\);", regex::escape(func_name)),
+            format!(r"(?m){}\s*\([^{{;]*", regex::escape(func_name)),
+        ];
         
-        if let Some(m) = func_regex.find(content) {
-            let proto = m.as_str().trim_end_matches('{').trim();
-            return Ok(proto.to_string());
+        for pattern in &patterns {
+            if let Ok(func_regex) = Regex::new(pattern) {
+                if let Some(m) = func_regex.find(content) {
+                    let proto = m.as_str()
+                        .trim_end_matches('{')
+                        .trim_end_matches(';')
+                        .trim();
+                    if !proto.is_empty() && proto.len() > func_name.len() {
+                        return Ok(proto.to_string());
+                    }
+                }
+            }
         }
 
         // Fallback: generate from function name
-        Ok(format!("/* Generated prototype for {} */", func_name))
+        Ok(format!("/* Function: {} */", func_name))
     }
 
     fn generate_tags(&self, func_name: &str, content: &str) -> Vec<String> {

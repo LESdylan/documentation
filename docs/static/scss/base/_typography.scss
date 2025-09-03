@@ -1,0 +1,159 @@
+// ==========================================================================
+// Typography System
+// ==========================================================================
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
+
+body {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+  font-size: map-get($font-sizes, 'base');
+  font-weight: map-get($font-weights, 'normal');
+  line-height: map-get($line-heights, 'normal');
+  color: color('text-secondary');
+  background: linear-gradient(135deg, color('bg-primary') 0%, color('bg-secondary') 50%, color('bg-tertiary') 100%);
+  min-height: 100vh;
+}
+
+// Heading hierarchy
+h1, h2, h3, h4, h5, h6 {
+  color: color('text-primary');
+  font-weight: map-get($font-weights, 'semibold');
+  line-height: map-get($line-heights, 'tight');
+  letter-spacing: -0.025em;
+  margin-bottom: space('4');
+}
+
+h1 {
+  font-size: map-get($font-sizes, '5xl');
+  font-weight: map-get($font-weights, 'bold');
+  background: linear-gradient(135deg, color('primary') 0%, color('accent-purple') 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: space('6');
+}
+
+h2 {
+  font-size: map-get($font-sizes, '3xl');
+  position: relative;
+  
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: -8px;
+    left: 0;
+    width: 60px;
+    height: 3px;
+    background: linear-gradient(90deg, color('primary'), color('accent-teal'));
+    border-radius: radius('full');
+  }
+}
+
+h3 {
+  font-size: map-get($font-sizes, '2xl');
+}
+
+h4 {
+  font-size: map-get($font-sizes, 'xl');
+}
+
+h5 {
+  font-size: map-get($font-sizes, 'lg');
+}
+
+h6 {
+  font-size: map-get($font-sizes, 'base');
+}
+
+// Paragraph and text
+p {
+  margin-bottom: space('4');
+  line-height: map-get($line-heights, 'relaxed');
+}
+
+// Links
+a {
+  color: color('primary');
+  transition: transition('base');
+  
+  &:hover {
+    color: color('primary-hover');
+  }
+}
+
+// Code and pre
+code {
+  font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+  font-size: 0.9em;
+  background: color('surface-tertiary');
+  color: color('accent-teal');
+  padding: space('1') space('2');
+  border-radius: radius('sm');
+  border: 1px solid color('border-primary');
+}
+
+pre {
+  font-family: 'JetBrains Mono', 'Fira Code', 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+  background: color('surface-primary');
+  border: 1px solid color('border-primary');
+  border-radius: radius('lg');
+  padding: space('6');
+  overflow-x: auto;
+  margin: space('6') 0;
+  position: relative;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, color('primary'), transparent);
+  }
+  
+  code {
+    background: none;
+    border: none;
+    padding: 0;
+    color: color('text-secondary');
+    font-size: map-get($font-sizes, 'sm');
+  }
+}
+
+// Lists
+ul, ol {
+  margin-bottom: space('4');
+  padding-left: space('6');
+  
+  li {
+    margin-bottom: space('2');
+    line-height: map-get($line-heights, 'relaxed');
+  }
+}
+
+// Blockquotes
+blockquote {
+  border-left: 4px solid color('primary');
+  padding-left: space('6');
+  margin: space('6') 0;
+  font-style: italic;
+  color: color('text-tertiary');
+}
+
+// Strong and emphasis
+strong {
+  font-weight: map-get($font-weights, 'semibold');
+  color: color('text-primary');
+}
+
+em {
+  font-style: italic;
+  color: color('text-primary');
+}
+
+// Small text
+small {
+  font-size: map-get($font-sizes, 'sm');
+  color: color('text-muted');
+}

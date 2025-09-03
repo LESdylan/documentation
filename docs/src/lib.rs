@@ -9,21 +9,47 @@ pub struct LibraryMetadata {
     pub author: String,
     pub categories: Vec<String>,
     pub functions: HashMap<String, FunctionMetadata>,
+    #[serde(default)]
+    pub order: Vec<String>, // discovery order
 }
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct FunctionMetadata {
     pub name: String,
+    // top-level directory (first segment)
     pub category: String,
+    // full relative path like "data_structures/vector"
+    #[serde(default)]
+    pub category_path: String,
+    #[serde(default)]
     pub tags: Vec<String>,
+    #[serde(default)]
     pub prototype: String,
+    #[serde(default)]
     pub description: String,
+    #[serde(default)]
     pub parameters: Vec<Parameter>,
+    #[serde(default)]
     pub return_value: String,
+    #[serde(default)]
     pub examples: Vec<Example>,
     pub complexity: Option<String>,
+    #[serde(default)]
     pub notes: Vec<String>,
+    #[serde(default)]
     pub see_also: Vec<String>,
+
+    // --- SPA manual fields (optional) ---
+    #[serde(default)]
+    pub updated_at: Option<String>,
+    #[serde(default)]
+    pub author_role: Option<String>,
+    #[serde(default)]
+    pub related: Vec<String>,
+    #[serde(default)]
+    pub manual_path: Option<String>,
+    #[serde(default)]
+    pub manual_html: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize)]

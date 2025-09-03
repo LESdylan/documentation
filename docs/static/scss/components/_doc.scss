@@ -1,0 +1,12 @@
+#doc-view.hidden { display: none !important; }
+#doc-view .doc-container {
+	max-width: 900px; margin: 16px auto; padding: 16px;
+	background: var(--panel); border: 1px solid var(--border);
+	border-radius: var(--radius); box-shadow: var(--shadow-1);
+}
+#doc-view h1, #doc-view h2, #doc-view h3 { color: var(--text-0); }
+#doc-view p, #doc-view li { color: var(--text-1); }
+#doc-view pre, #doc-view code {
+	background: #0a0f15; border: 1px solid #22324a; color: #d1e0ee;
+	border-radius: 8px; padding: 10px; overflow-x: auto;
+}

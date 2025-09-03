@@ -1,0 +1,10 @@
+@use "abstracts/variables";
+@use "base/base";
+@use "layout/layout";
+@use "components/cards";
+@use "components/tags";
+@use "components/doc";
+@use "pages/home";
+/* TODO: migrate remaining rules (header, nav, overview, responsive) from styles.css into SCSS partials. */
+
+/*# sourceMappingURL=styles.css.map */
