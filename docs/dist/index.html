@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>libft Documentation</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header class="header">
+        <div class="header__content">
+            <h1 class="header__title">libft Documentation</h1>
+            <p class="header__subtitle">42 School C Library - Extended standard library functions</p>
+        </div>
+        <div class="header__particles"></div>
+    </header>
+
+    <nav class="navigation">
+        <div class="navigation__container">
+            <div class="navigation__search">
+                <input type="text" class="search__input" placeholder="Search functions..." id="searchInput">
+                <i class="fas fa-search search__icon"></i>
+            </div>
+            <div class="navigation__filters">
+                <span class="filter__tag active" data-filter="all">All</span>
+                <span class="filter__tag" data-filter="basic">Basic</span>
+                <span class="filter__tag" data-filter="intermediate">Intermediate</span>
+                <span class="filter__tag" data-filter="advanced">Advanced</span>
+            </div>
+        </div>
+    </nav>
+
+	<div class="main-content">
+		<section class="overview" id="view-home">
+			<h2 class="overview__title">Library Overview</h2>
+			<div class="stats-grid">
+				<div class="stat-card">
+					<span class="stat-number">0</span>
+					<span class="stat-label">Total Functions</span>
+				</div>
+				<div class="stat-card">
+					<span class="stat-number">0</span>
+					<span class="stat-label">Categories</span>
+				</div>
+				<div class="stat-card">
+					<span class="stat-number">libft</span>
+					<span class="stat-label">Root Library</span>
+				</div>
+				<div class="stat-card">
+					<span class="stat-number">✨</span>
+					<span class="stat-label">Quality</span>
+				</div>
+			</div>
+		</section>
+
+		<section class="categories" id="view-categories">
+			<h2 class="categories__title"><i class="fas fa-folder-open"></i> Library Structure</h2>
+			<ul class="categories__grid">
+			</ul>
+		</section>
+
+		<section class="functions-header" id="view-functions">
+			<h2 class="functions__title"><i class="fas fa-code"></i> Functions Browser</h2>
+			<p class="functions__subtitle">Click on any function card to see details, or use the tree navigation</p>
+		</section>
+
+		<div class="layout">
+			<aside class="sidebar">
+				<div class="sidebar__title">
+					<i class="fas fa-sitemap"></i> Library Tree
+				</div>
+				<div class="tree-container">
+<div class="tree-view"></div>
+				</div>
+			</aside>
+			<main>
+			</main>
+		</div>
+	</div>
+
+	<div id="quick-preview-modal" class="modal-overlay hidden">
+		<div class="modal-container quick-preview">
+			<div class="modal-header">
+				<h3 id="preview-title">Function Preview</h3>
+				<button class="modal-close" onclick="closeQuickPreview()">✕</button>
+			</div>
+			<div class="modal-content">
+				<div class="preview-prototype">
+					<h4>Prototype</h4>
+					<code id="preview-prototype"></code>
+				</div>
+				<div class="preview-description">
+					<h4>Description</h4>
+					<p id="preview-description"></p>
+				</div>
+				<div class="preview-tags">
+					<h4>Tags</h4>
+					<div id="preview-tags"></div>
+				</div>
+				<div class="preview-actions">
+					<button class="btn-primary" onclick="showFullDocsFromPreview()">
+						<i class="fas fa-arrow-right"></i> View Full Documentation
+					</button>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div id="full-docs-modal" class="modal-overlay hidden">
+		<div class="modal-container full-docs">
+			<div class="modal-header">
+				<h3 id="docs-title">Documentation</h3>
+				<button class="modal-close" onclick="closeFullDocs()">✕</button>
+			</div>
+			<div class="modal-content" id="docs-content">
+				<!-- Full documentation content -->
+			</div>
+		</div>
+	</div>
+
+	<script>
+		let currentPreviewFunction = '';
+
+		// Quick preview functionality
+		function showQuickPreview(funcName) {
+			currentPreviewFunction = funcName;
+			const card = document.querySelector(`[data-func="${funcName}"]`);
+			if (!card) return;
+
+			const title = card.querySelector('.function-card__title').textContent.trim();
+			const description = card.querySelector('.function-card__description').textContent;
+			const prototype = card.querySelector('.function-card__code').textContent;
+			const tags = Array.from(card.querySelectorAll('.tag')).map(tag => tag.outerHTML).join('');
+
+			document.getElementById('preview-title').textContent = title;
+			document.getElementById('preview-prototype').textContent = prototype;
+			document.getElementById('preview-description').textContent = description;
+			document.getElementById('preview-tags').innerHTML = tags;
+
+			document.getElementById('quick-preview-modal').classList.remove('hidden');
+			document.body.style.overflow = 'hidden';
+		}
+
+		function closeQuickPreview() {
+			document.getElementById('quick-preview-modal').classList.add('hidden');
+			document.body.style.overflow = 'auto';
+		}
+
+		function showFullDocsFromPreview() {
+			closeQuickPreview();
+			showFullDocs(currentPreviewFunction);
+		}
+
+		function showFullDocs(funcName) {
+			// Use same sanitation as Rust sanitize_id: lower, non-alnum -> '-'
+			const manualId = ('manual-' + funcName).toLowerCase().replace(/[^a-z0-9]/g, '-');
+			const template = document.getElementById(manualId);
+			const docsContent = document.getElementById('docs-content');
+			const docsTitle = document.getElementById('docs-title');
+
+			docsTitle.textContent = funcName;
+
+			if (template) {
+				docsContent.innerHTML = template.innerHTML;
+			} else {
+				// Fallback to card info
+				const card = document.querySelector(`[data-func="${funcName}"]`);
+				if (card) {
+					const title = card.querySelector('.function-card__title').textContent.trim();
+					const description = card.querySelector('.function-card__description').textContent;
+					const prototype = card.querySelector('.function-card__code').textContent;
+					const tags = Array.from(card.querySelectorAll('.tag')).map(tag => tag.outerHTML).join('');
+
+					docsContent.innerHTML = `
+						<h1>${title}</h1>
+						<h2>Description</h2>
+						<p>${description}</p>
+						<h2>Prototype</h2>
+						<pre><code>${prototype}</code></pre>
+						<h2>Tags</h2>
+						<div class="function-card__tags">${tags}</div>
+						<div class="no-manual-notice">
+							<i class="fas fa-info-circle"></i>
+							Full manual documentation is not yet available for this function.
+						</div>
+					`;
+				}
+			}
+
+			document.getElementById('full-docs-modal').classList.remove('hidden');
+			document.body.style.overflow = 'hidden';
+		}
+
+		function closeFullDocs() {
+			document.getElementById('full-docs-modal').classList.add('hidden');
+			document.body.style.overflow = 'auto';
+		}
+
+		// Enhanced router with modal support
+		function router() {
+			const h = (location.hash || '').replace(/^#/, '');
+			if (!h || h === '/' || h === '/home') {
+				renderHome();
+			} else if (h.startsWith('/category/')) {
+				const path = h.slice('/category/'.length);
+				renderCategory(path);
+			} else if (h.startsWith('/function/')) {
+				const name = decodeURIComponent(h.slice('/function/'.length));
+				showFullDocs(name);
+			} else {
+				renderHome();
+			}
+		}
+
+		function renderHome() {
+			document.getElementById('view-home').classList.remove('hidden');
+			document.getElementById('view-categories').classList.remove('hidden');
+			document.getElementById('view-functions').classList.remove('hidden');
+			document.querySelectorAll('.func-section').forEach(s => s.classList.remove('hidden'));
+			document.querySelectorAll('.function-card').forEach(c => c.style.display = '');
+		}
+
+		function renderCategory(path) {
+			document.getElementById('view-home').classList.add('hidden');
+			document.getElementById('view-categories').classList.add('hidden');
+			document.getElementById('view-functions').classList.remove('hidden');
+			
+			// Hide all sections first with transition
+			document.querySelectorAll('.func-section').forEach(sec => {
+				sec.style.opacity = '0';
+				sec.style.transform = 'translateY(20px)';
+				setTimeout(() => sec.classList.add('hidden'), 150);
+			});
+			
+			setTimeout(() => {
+				const prefix = path + '/';
+				document.querySelectorAll('.func-section').forEach(sec => {
+					const spath = sec.getAttribute('data-path') || '';
+					if (spath === path || spath.startsWith(prefix)) {
+						sec.classList.remove('hidden');
+						sec.style.opacity = '1';
+						sec.style.transform = 'translateY(0)';
+						sec.style.transition = 'all 0.3s ease-out';
+					}
+				});
+				
+				const first = document.querySelector('.func-section:not(.hidden)');
+				if (first) {
+					first.scrollIntoView({ behavior: 'smooth', block: 'start' });
+				}
+			}, 200);
+		}
+
+		// Search functionality
+		const searchInput = document.getElementById('searchInput');
+		if (searchInput) {
+			searchInput.addEventListener('input', function(e) {
+				const query = e.target.value.toLowerCase();
+				const cards = document.querySelectorAll('.function-card');
+				cards.forEach(card => {
+					const name = card.querySelector('.function-card__title')?.textContent?.toLowerCase() || '';
+					const description = card.querySelector('.function-card__description')?.textContent?.toLowerCase() || '';
+					const tags = Array.from(card.querySelectorAll('.tag')).map(t => t.textContent.toLowerCase());
+					const matches = name.includes(query) || description.includes(query) || tags.some(t => t.includes(query));
+					card.style.display = matches ? '' : 'none';
+				});
+			});
+		}
+
+		// Filter functionality
+		document.querySelectorAll('.filter__tag').forEach(tag => {
+			tag.addEventListener('click', function() {
+				document.querySelectorAll('.filter__tag').forEach(t => t.classList.remove('active'));
+				this.classList.add('active');
+				const filter = this.getAttribute('data-filter');
+				const cards = document.querySelectorAll('.function-card');
+				cards.forEach(card => {
+					if (filter === 'all') {
+						card.style.display = '';
+					} else {
+						const tags = Array.from(card.querySelectorAll('.tag')).map(t => t.textContent.toLowerCase());
+						card.style.display = tags.includes(filter) ? '' : 'none';
+					}
+				});
+			});
+		});
+
+		// Close modals on escape key
+		document.addEventListener('keydown', function(e) {
+			if (e.key === 'Escape') {
+				closeQuickPreview();
+				closeFullDocs();
+			}
+		});
+
+		// Close modals on overlay click
+		document.querySelectorAll('.modal-overlay').forEach(overlay => {
+			overlay.addEventListener('click', function(e) {
+				if (e.target === this) {
+					closeQuickPreview();
+					closeFullDocs();
+				}
+			});
+		});
+
+		// Initialize
+		window.addEventListener('hashchange', router);
+		window.addEventListener('DOMContentLoaded', router);
+		router();
+	</script>

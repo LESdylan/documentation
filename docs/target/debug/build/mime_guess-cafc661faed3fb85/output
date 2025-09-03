@@ -1,1 +1,1 @@
-cargo:rustc-env=MIME_TYPES_GENERATED_PATH=/home/dlesieur/Documents/projects42/documentation/docs/target/debug/build/mime_guess-cafc661faed3fb85/out/mime_types_generated.rs
+cargo:rustc-env=MIME_TYPES_GENERATED_PATH=/home/dlesieur/Documents/projects42/Universe42/Milestone0/web_lib_beta/docs/target/debug/build/mime_guess-cafc661faed3fb85/out/mime_types_generated.rs

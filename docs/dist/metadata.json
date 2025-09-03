@@ -1,0 +1,9 @@
+{
+  "name": "libft",
+  "version": "1.0.0",
+  "description": "42 School C Library - Extended standard library functions",
+  "author": "dlesieur",
+  "categories": [],
+  "functions": {},
+  "order": []
+}
